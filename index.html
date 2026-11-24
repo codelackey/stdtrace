@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Milsoft STD Switching, Backfeed & Trace</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" crossorigin="" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header>
+    <strong>STD Switching &amp; Trace</strong>
+    <label>
+      Click Action:
+      <select id="action">
+        <option value="switch">Toggle Open/Close</option>
+        <option value="upstream">Trace Upstream (to Source)</option>
+        <option value="downstream">Trace Downstream (to Loads)</option>
+      </select>
+    </label>
+    <label>
+      Phase:
+      <select id="phase">
+        <option value="ALL">All (ABC)</option>
+        <option value="A">Phase A</option>
+        <option value="B">Phase B</option>
+        <option value="C">Phase C</option>
+      </select>
+    </label>
+    <button id="clear-trace" class="secondary">Clear Trace</button>
+    <button id="reset-btn" class="secondary">Reset Switches</button>
+    <button id="download-std">Download .STD</button>
+    <span id="status">Select an action and click any network element</span>
+  </header>
+  <div id="map"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js" crossorigin=""></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

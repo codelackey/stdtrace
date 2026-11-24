@@ -1,0 +1,19 @@
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Environment & local secrets
+.env
+.env.*
+.dev.vars
+
+# Dependencies & build artifacts
+node_modules/
+dist/
+build/
+.wrangler/
+
+# Logs
+*.log
