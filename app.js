@@ -33,11 +33,11 @@ function createDeviceIcon(type, color, isOpen) {
   const fill = isOpen ? '#ffffff' : color;
   const stroke = isOpen ? '#475569' : '#0f172a';
   const shapes = {
-    9:  `<rect x="3" y="3" width="18" height="18" fill="${fill}" stroke="${stroke}" stroke-width="2.5"/>`,
-    5:  `<polygon points="12,3 22,20 2,20" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`,
+    9: `<rect x="3" y="3" width="18" height="18" fill="${fill}" stroke="${stroke}" stroke-width="2.5"/>`,
+    5: `<polygon points="12,3 22,20 2,20" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`,
     10: `<polygon points="12,2 22,12 12,22 2,12" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`,
-    6:  `<rect x="5" y="5" width="14" height="14" fill="${fill}" stroke="${stroke}" stroke-width="2.5"/>`,
-    8:  `<circle cx="12" cy="12" r="6.5" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`
+    6: `<rect x="5" y="5" width="14" height="14" fill="${fill}" stroke="${stroke}" stroke-width="2.5"/>`,
+    8: `<circle cx="12" cy="12" r="6.5" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`
   };
   return L.divIcon({
     className: '',
@@ -180,12 +180,16 @@ function addLegend(targetMap) {
         <div class="legend-row"><span class="swatch-line" style="background:#f59e0b"></span>Backfed (Off-Nominal)</div>
         <div class="legend-row"><span class="swatch-line" style="background:#ef4444"></span>De-Energized (Outage)</div>
         <div class="legend-row"><span class="swatch-line" style="background:#d946ef"></span>Parallel Loop Warning</div>
-        <div class="legend-row"><span class="swatch-dashed"></span>Open Device</div>
+        <div class="legend-row">
+          <svg width="16" height="16" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="#ffffff" stroke="#475569" stroke-width="2.5"/></svg>
+          Open Device (Hollow)
+        </div>
+
 
         <div class="legend-section">Device Symbols</div>
         <div class="legend-row"><svg width="16" height="16" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" fill="#2563eb" stroke="#0f172a" stroke-width="2.5"/></svg>Substation Breaker</div>
         <div class="legend-row"><svg width="16" height="16" viewBox="0 0 24 24"><polygon points="12,2 22,12 12,22 2,12" fill="#2563eb" stroke="#0f172a" stroke-width="2"/></svg>Recloser / Fuse</div>
-        <div class="legend-row"><svg width="16" height="16" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" fill="#ffffff" stroke="#475569" stroke-width="2.5"/></svg>Switch (Open / Closed)</div>
+        <div class="legend-row"><svg width="16" height="16" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" fill="#2563eb" stroke="#0f172a" stroke-width="2.5"/></svg>Switch</div>
         <div class="legend-row"><svg width="16" height="16" viewBox="0 0 24 24"><polygon points="12,3 22,20 2,20" fill="#2563eb" stroke="#0f172a" stroke-width="2"/></svg>Transformer</div>
         <div class="legend-row"><svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6.5" fill="#2563eb" stroke="#0f172a" stroke-width="2"/></svg>Consumer / Meter</div>
       </div>
