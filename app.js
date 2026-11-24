@@ -148,6 +148,13 @@ document.getElementById('reset-btn').addEventListener('click', () => {
   render();
 });
 
+const helpDialog = document.getElementById('help-dialog');
+document.getElementById('help-btn').addEventListener('click', () => helpDialog.showModal());
+document.getElementById('close-help').addEventListener('click', () => helpDialog.close());
+helpDialog.addEventListener('click', (e) => {
+  if (e.target === helpDialog) helpDialog.close(); // Close when clicking dark backdrop
+});
+
 document.getElementById('download-std').addEventListener('click', () => {
   const text = sections.map(formatStdRow).join('\r\n');
   const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });

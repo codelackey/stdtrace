@@ -30,10 +30,27 @@
     <button id="clear-trace" class="secondary">Clear Trace</button>
     <button id="reset-btn" class="secondary">Reset Switches</button>
     <button id="download-std">Download .STD</button>
-    <span id="status">Select an action and click any network element</span>
+    <button id="help-btn" class="secondary">? Help</button>
+    <span id="status"></span>
   </header>
   <div id="map"></div>
-
+  <dialog id="help-dialog">
+    <div class="dialog-header">
+      <strong>STD Switching &amp; Backfeed Simulator Guide</strong>
+      <button id="close-help" class="secondary">✕</button>
+    </div>
+    <p><strong>1. Click Action Modes:</strong></p>
+    <ul>
+      <li><strong>Toggle Open/Close:</strong> Click any Substation Breaker, Recloser/Fuse, Switch, or Transformer to open or close it.</li>
+      <li><strong>Trace Upstream / Downstream:</strong> Click any element to highlight its live path to the active source or downstream loads.</li>
+    </ul>
+    <p><strong>2. Try a Backfeed Restoration Scenario:</strong></p>
+    <ol>
+      <li>Click <strong>REC-01</strong> (blue diamond) to open it and simulate an outage on Feeder 1.</li>
+      <li>Click <strong>SW-TIE</strong> (hollow square) to close the tie switch and restore Feeder 1 via an <strong>amber backfeed</strong> from Substation 2.</li>
+      <li>Close <strong>REC-01</strong> while <strong>SW-TIE</strong> is still closed to trigger a <strong>magenta parallel loop warning</strong>.</li>
+    </ol>
+  </dialog>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js" crossorigin=""></script>
   <script type="module" src="./app.js"></script>
 </body>
