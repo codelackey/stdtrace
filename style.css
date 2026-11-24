@@ -19,4 +19,34 @@ body {
   button { background: #3b82f6; color: #fff; }
   button.secondary { background: #475569; }
   #status { margin-left: auto; font-size: 0.85rem; color: #cbd5e1; }
+  .map-legend {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 0.65rem 0.85rem;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.25);
+    font-size: 0.8rem;
+    color: #1e293b;
+    line-height: 1.4;
+    min-width: 175px;
+  }
+  .legend-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+    border-bottom: 1px solid #cbd5e1;
+    padding-bottom: 0.25rem;
+  }
+  .legend-header button {
+    background: transparent;
+    color: #475569;
+    padding: 0 0.25rem;
+    font-size: 0.9rem;
+  }
+  .legend-section { margin-top: 0.45rem; font-weight: 600; color: #475569; font-size: 0.72rem; text-transform: uppercase; }
+  .legend-row { display: flex; align-items: center; gap: 0.45rem; margin: 0.22rem 0; }
+  .swatch-line { width: 18px; height: 4px; border-radius: 2px; display: inline-block; }
+  .swatch-dashed { width: 18px; border-top: 3px dashed #94a3b8; display: inline-block; }
+  .legend-body.collapsed { display: none; }
   

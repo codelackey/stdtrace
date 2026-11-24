@@ -158,4 +158,51 @@ document.getElementById('download-std').addEventListener('click', () => {
   URL.revokeObjectURL(a.href);
 });
 
+function addLegend(targetMap) {
+  const legend = L.control({ position: 'bottomright' });
+
+  legend.onAdd = () => {
+    const div = L.DomUtil.create('div', 'map-legend');
+    // Note: L.DomEvent.disableClickPropagation(div) prevents 
+    // clicking the legend's −/+ collapse button from accidentally
+    // clicking through to map elements underneath.
+    L.DomEvent.disableClickPropagation(div);
+
+    div.innerHTML = `
+      <div class="legend-header">
+        <span>Network Legend</span>
+        <button id="legend-toggle" title="Collapse/Expand">−</button>
+      </div>
+      <div id="legend-body" class="legend-body">
+        <div class="legend-section">Energization State</div>
+        <div class="legend-row"><span class="swatch-line" style="background:#2563eb"></span>Substation 1 (Normal)</div>
+        <div class="legend-row"><span class="swatch-line" style="background:#0d9488"></span>Substation 2 (Normal)</div>
+        <div class="legend-row"><span class="swatch-line" style="background:#f59e0b"></span>Backfed (Off-Nominal)</div>
+        <div class="legend-row"><span class="swatch-line" style="background:#ef4444"></span>De-Energized (Outage)</div>
+        <div class="legend-row"><span class="swatch-line" style="background:#d946ef"></span>Parallel Loop Warning</div>
+        <div class="legend-row"><span class="swatch-dashed"></span>Open Device</div>
+
+        <div class="legend-section">Device Symbols</div>
+        <div class="legend-row"><svg width="16" height="16" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" fill="#2563eb" stroke="#0f172a" stroke-width="2.5"/></svg>Substation Breaker</div>
+        <div class="legend-row"><svg width="16" height="16" viewBox="0 0 24 24"><polygon points="12,2 22,12 12,22 2,12" fill="#2563eb" stroke="#0f172a" stroke-width="2"/></svg>Recloser / Fuse</div>
+        <div class="legend-row"><svg width="16" height="16" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" fill="#ffffff" stroke="#475569" stroke-width="2.5"/></svg>Switch (Open / Closed)</div>
+        <div class="legend-row"><svg width="16" height="16" viewBox="0 0 24 24"><polygon points="12,3 22,20 2,20" fill="#2563eb" stroke="#0f172a" stroke-width="2"/></svg>Transformer</div>
+        <div class="legend-row"><svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6.5" fill="#2563eb" stroke="#0f172a" stroke-width="2"/></svg>Consumer / Meter</div>
+      </div>
+    `;
+
+    const toggleBtn = div.querySelector('#legend-toggle');
+    const bodyEl = div.querySelector('#legend-body');
+    toggleBtn.addEventListener('click', () => {
+      const collapsed = bodyEl.classList.toggle('collapsed');
+      toggleBtn.textContent = collapsed ? '+' : '−';
+    });
+
+    return div;
+  };
+
+  legend.addTo(targetMap);
+}
+
+addLegend(map);
 render();
