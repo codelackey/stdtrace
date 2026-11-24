@@ -76,5 +76,31 @@ body {
     margin-bottom: 0.75rem;
   }
   dialog ul, dialog ol { padding-left: 1.25rem; margin: 0.35rem 0 0.75rem; }
+.sync-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  background: #475569;
+  color: #e2e8f0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.sync-badge::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #94a3b8;
+}
+.sync-badge.live {
+  background: #065f46;
+  color: #d1fae5;
+}
+.sync-badge.live::before {
+  background: #34d399;
+}
   
   

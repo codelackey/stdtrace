@@ -2,6 +2,26 @@ import { initialSections, SWITCHABLE_TYPES, analyzeEnergization, traceDirection 
 
 let sections = structuredClone(initialSections);
 let activeTrace = null;
+let liveSync = false;
+const syncBadgeEl = document.getElementById('sync-badge');
+
+function setSyncState(isLive) {
+  liveSync = isLive;
+  syncBadgeEl.textContent = isLive ? 'LIVE SYNC' : 'STANDALONE';
+  syncBadgeEl.classList.toggle('live', isLive);
+}
+// Auto-connect to Node SSE backend when running locally; silently fall back on GitHub Pages
+const events = new EventSource('/api/events');
+events.onopen = () => setSyncState(true);
+events.onmessage = (e) => {
+  sections = JSON.parse(e.data);
+  render();
+};
+events.onerror = () => {
+  setSyncState(false);
+  events.close(); // Stop retrying when hosted on static GitHub Pages
+};
+
 
 const SYMBOL_TYPES = new Set();
 SYMBOL_TYPES.add(5);
@@ -50,7 +70,14 @@ function createDeviceIcon(type, color, isOpen) {
 function handleElementClick(sec) {
   const mode = actionEl.value;
   if (mode === 'switch') {
-    if (SWITCHABLE_TYPES.has(sec.element_type)) {
+    if (!SWITCHABLE_TYPES.has(sec.element_type)) return;
+    if (liveSync) {
+      fetch('/api/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ section_id: sec.section_id })
+      });
+    } else {
       sec.is_open = sec.is_open ? 0 : 1;
       render();
     }
@@ -143,9 +170,17 @@ function formatStdRow(r) {
 phaseEl.addEventListener('change', render);
 document.getElementById('clear-trace').addEventListener('click', () => { activeTrace = null; render(); });
 document.getElementById('reset-btn').addEventListener('click', () => {
-  sections = structuredClone(initialSections);
   activeTrace = null;
-  render();
+  if (liveSync) {
+    fetch('/api/toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reset: true })
+    });
+  } else {
+    sections = structuredClone(initialSections);
+    render();
+  }
 });
 
 const helpDialog = document.getElementById('help-dialog');
