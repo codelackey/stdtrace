@@ -3,13 +3,14 @@
 An interactive, zero-dependency electrical distribution simulator that models a dual-substation network using Milsoft WindMil `.STD` topology conventions and visualizes real-time switching, backfeeds, outages, parallel loops, and phase-aware upstream/downstream traces on a Leaflet map.
 
 The application runs in **dual mode**:
-* **Live Sync Mode (`LIVE SYNC`):** Powered by a zero-dependency Node.js server (`server.mjs`) using Server-Sent Events (SSE) to synchronize switching operations across multiple open browser tabs or operator screens in real time.
+* **Live Sync Mode (`LIVE SYNC`):** Powered by a zero-dependency Node.js server (`server.mjs`) using Server-Sent Events (SSE) and lightweight **Delta Sync** messages (`INIT`, `DELTA`, `RESET`) to synchronize switching operations across multiple open browser tabs or operator screens in real time.
 * **Standalone Mode (`STANDALONE`):** Runs purely client-side on static hosts like GitHub Pages with automatic fallback when no backend stream is present.
 
 ---
 
 ## Key Features
-* **Multi-Client Control Room Sync (`server.mjs`):** Switch toggles (`REC-01`, `SW-TIE`, `XFMR-1`, `SUB-01`, etc.) and resets broadcast immediately over `/api/events` (SSE) to all connected browser clients using only Node.js built-in modules (`node:http`, `node:fs/promises`)—requiring zero `npm install` or `node_modules` disk overhead.
+* **Lightweight Multi-Client Delta Sync (`server.mjs`):** Rather than re-sending full network geometry on every action, the server tracks only off-nominal switch `overrides` (`section_id -> 0 | 1`) and broadcasts ~50-byte `DELTA` JSON payloads over `/api/events` (SSE) using only Node.js built-in modules (`node:http`, `node:fs/promises`)—requiring zero `npm install` or `node_modules` disk overhead.
+* **Observability & Console Telemetry:** Timestamped `[SERVER]` terminal logs and `[SYNC]` / `[TRACE]` browser DevTools console logs report client connections, byte payload sizes, active override counts, and trace operations in real time.
 * **Real-Time Switching Operations:** Click any Substation Breaker (`Type 9`), Recloser/Fuse (`Type 10`), Switch (`Type 6`), or Transformer (`Type 5`) to toggle it open or closed and immediately re-evaluate system energization.
 * **Automatic Backfeed & Loop Detection:** Identifies sections fed by an alternate substation across closed tie switches (**amber**) and warns operators if two substations are tied in parallel (**magenta**).
 * **Phase-Aware Upstream & Downstream Tracing:** Filter traces by `All (ABC)`, `Phase A`, `Phase B`, or `Phase C` to trace live power flow back to the active source or downstream to affected consumers and connected kVA.
@@ -23,8 +24,8 @@ The application runs in **dual mode**:
 ├── index.html     # Toolbar, LIVE SYNC/STANDALONE pill, <dialog> Help modal, and map container
 ├── style.css      # Header layout, sync status badge, modal dialog, and floating legend styles
 ├── data.js        # Milsoft .STD data model, undirected graph builder, and trace algorithms
-├── app.js         # Dual-mode SSE client, Leaflet rendering, inline SVG symbology, and UI handlers
-├── server.mjs     # Zero-dependency Node.js static file & SSE broadcast server
+├── app.js         # Dual-mode SSE Delta Sync client, Leaflet rendering, SVG symbology, and UI handlers
+├── server.mjs     # Zero-dependency Node.js static file & SSE Delta Sync broadcast server
 └── package.json   # Minimal {"type":"module"} manifest enabling native ES modules in Node
 ```
 
@@ -64,11 +65,17 @@ When the user selects **Trace Upstream** or **Trace Downstream** and clicks an e
 * `traceDirection()` runs a targeted BFS over the `flowParents` (upstream to active source) or `flowChildren` (downstream to loads) sets computed by `analyzeEnergization()`.
 * `app.js` renders a yellow highlight halo (`#fde047`) underneath the traced polylines and markers and sums all traced consumer counts (`element_type === 8`) and `connected_kva` values in the top status bar.
 
-### 4. Dual-Mode Multi-Client Sync (`server.mjs` & `app.js`)
-* **Server (`server.mjs`):** Uses Node's built-in `node:http` to serve static assets and expose two lightweight endpoints:
-  * `GET /api/events` — Holds open a `text/event-stream` (SSE) connection for each browser client and pushes the current circuit state on connect and whenever a switch changes.
-  * `POST /api/toggle` — Accepts `{ section_id }` or `{ reset: true }`, updates the shared in-memory circuit state, and broadcasts the updated JSON to all connected clients.
-* **Client (`app.js`):** Attempts to connect to `/api/events` via `EventSource` on page load. When connected, the header badge turns green (**`LIVE SYNC`**) and switch clicks route through `POST /api/toggle`. When hosted on a static server such as GitHub Pages, `EventSource` closes cleanly on error and the badge displays **`STANDALONE`**.
+### 4. Dual-Mode Delta Sync Protocol (`server.mjs` & `app.js`)
+Modeled after real utility SCADA/OMS telemetry pipelines, static network geometry stays loaded in each browser while only compact operational state changes cross the wire:
+
+* **Server (`server.mjs`):**
+  * Maintains an in-memory `overrides` `Map` (`section_id -> 0 | 1`) storing only devices currently in an off-nominal state, plus a 25-second `: ping` SSE heartbeat.
+  * `GET /api/events` — Sends an initial `{"type":"INIT","overrides":{...}}` payload when a browser connects, then streams lightweight `{"type":"DELTA","section_id":"...","is_open":0|1}` or `{"type":"RESET"}` messages on every state change.
+  * `POST /api/toggle` — Accepts `{ section_id }` or `{ reset: true }`, updates `overrides`, logs the transition to the terminal, and broadcasts the delta to all active clients.
+* **Client (`app.js`):**
+  * Connects to `/api/events` via `EventSource` on load, turns the header pill green (**`LIVE SYNC`**), and applies incoming deltas in **O(1)** time using a `sectionsById` `Map`.
+  * Logs all incoming/outgoing sync frames and byte sizes to the browser DevTools Console (`[SYNC]`).
+  * When hosted on a static server such as GitHub Pages, `EventSource` closes cleanly on error and the pill displays **`STANDALONE`**.
 
 ---
 
@@ -79,7 +86,7 @@ Requires Node.js v20+ with **no external dependencies** (`npm install` is not ne
 ```bash
 node server.mjs
 ```
-Open `http://localhost:3000` in two or more browser tabs/windows. Toggling any switch or resetting the circuit in one window immediately updates all other open windows.
+Open `http://localhost:3000` in two or more browser tabs/windows (and optionally open Browser DevTools → Console) to watch `[SERVER]` and `[SYNC]` delta broadcasts synchronize switch toggles across every open client.
 
 ### Static / GitHub Pages Mode
 1. Push the repository to `main`.
@@ -89,6 +96,6 @@ Open `http://localhost:3000` in two or more browser tabs/windows. Toggling any s
 ---
 
 ## Credits
-* **Concept, Distribution Domain Logic & Implementation:** Project author (Milsoft WindMil `.STD` schema alignment, switching scenarios, multi-client architecture, and repository workflow).
-* **AI Pair Programming & Code Generation:** Built collaboratively with **Gemini** (Google), which assisted with the undirected graph traversal engine, phase-aware trace logic, inline SVG Leaflet symbology, zero-dependency Node SSE server, and technical documentation.
+* **Concept, Distribution Domain Logic & Implementation:** Project author (Milsoft WindMil `.STD` schema alignment, switching scenarios, multi-client Delta Sync architecture, and repository workflow).
+* **AI Pair Programming & Code Generation:** Built collaboratively with **Gemini** (Google), which assisted with the undirected graph traversal engine, phase-aware trace logic, inline SVG Leaflet symbology, zero-dependency Node SSE Delta Sync server, and technical documentation.
 * **Mapping & Base Tiles:** Powered by [Leaflet](https://leafletjs.com) and [OpenStreetMap](https://openstreetmap.org) contributors.
