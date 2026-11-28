@@ -1,6 +1,7 @@
 import { initialSections, SWITCHABLE_TYPES, analyzeEnergization, traceDirection } from './data.js';
 
 let sections = structuredClone(initialSections);
+let sectionsById = new Map(sections.map(s => [s.section_id, s]));
 let activeTrace = null;
 let liveSync = false;
 const syncBadgeEl = document.getElementById('sync-badge');
@@ -12,12 +13,35 @@ function setSyncState(isLive) {
 }
 // Auto-connect to Node SSE backend when running locally; silently fall back on GitHub Pages
 const events = new EventSource('/api/events');
-events.onopen = () => setSyncState(true);
+
+events.onopen = () => {
+  console.log('[SYNC] Connected to SSE stream (/api/events) -> LIVE SYNC active');
+  setSyncState(true);
+};
+
 events.onmessage = (e) => {
-  sections = JSON.parse(e.data);
+  const msg = JSON.parse(e.data);
+  console.log(`[SYNC] Received ${msg.type} (${e.data.length} bytes):`, msg);
+
+  if (msg.type === 'INIT') {
+    sections = structuredClone(initialSections);
+    sectionsById = new Map(sections.map(s => [s.section_id, s]));
+    for (const [id, isOpen] of Object.entries(msg.overrides)) {
+      if (sectionsById.has(id)) sectionsById.get(id).is_open = isOpen;
+    }
+  } else if (msg.type === 'DELTA') {
+    const sec = sectionsById.get(msg.section_id);
+    if (sec) sec.is_open = msg.is_open;
+  } else if (msg.type === 'RESET') {
+    sections = structuredClone(initialSections);
+    sectionsById = new Map(sections.map(s => [s.section_id, s]));
+    activeTrace = null;
+  }
   render();
 };
+
 events.onerror = () => {
+  console.log('[SYNC] No SSE backend detected -> falling back to STANDALONE mode');
   setSyncState(false);
   events.close(); // Stop retrying when hosted on static GitHub Pages
 };
@@ -72,6 +96,7 @@ function handleElementClick(sec) {
   if (mode === 'switch') {
     if (!SWITCHABLE_TYPES.has(sec.element_type)) return;
     if (liveSync) {
+      console.log(`[SYNC] Sending POST /api/toggle for ${sec.section_id}`);
       fetch('/api/toggle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -79,10 +104,12 @@ function handleElementClick(sec) {
       });
     } else {
       sec.is_open = sec.is_open ? 0 : 1;
+      console.log(`[LOCAL] Toggled ${sec.section_id} -> ${sec.is_open ? 'OPEN' : 'CLOSED'}`);
       render();
     }
   } else {
     activeTrace = { startId: sec.section_id, dir: mode };
+    console.log(`[TRACE] Running ${mode.toUpperCase()} trace from ${sec.section_id}`);
     render();
   }
 }
@@ -172,13 +199,16 @@ document.getElementById('clear-trace').addEventListener('click', () => { activeT
 document.getElementById('reset-btn').addEventListener('click', () => {
   activeTrace = null;
   if (liveSync) {
+    console.log('[SYNC] Sending POST /api/toggle { reset: true }');
     fetch('/api/toggle', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reset: true })
     });
   } else {
+    console.log('[LOCAL] Resetting switches to nominal state');
     sections = structuredClone(initialSections);
+    sectionsById = new Map(sections.map(s => [s.section_id, s]));
     render();
   }
 });
